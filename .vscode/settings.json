@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "array": "c",
+        "vector": "c",
+        "string_view": "c",
+        "usbtask.h": "c"
+    }
+}

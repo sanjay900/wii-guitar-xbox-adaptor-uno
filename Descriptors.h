@@ -46,7 +46,7 @@ S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
 #define _DESCRIPTORS_H_
 
 	/* Includes: */
-		#include <LUFA.h>
+		#include <LUFA/Drivers/USB/USB.h>
 
 		#include <avr/pgmspace.h>
 	/* Macros: */
@@ -55,13 +55,9 @@ S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
 
 	/* Function Prototypes: */
 		uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
-                                          const uint16_t wIndex,
-                                          const void** const DescriptorAddress
-      #if (defined(ARCH_HAS_MULTI_ADDRESS_SPACE) || defined(__DOXYGEN__)) && \
-          !(defined(USE_FLASH_DESCRIPTORS) || defined(USE_EEPROM_DESCRIPTORS) || defined(USE_RAM_DESCRIPTORS))
-                                          , uint8_t* const DescriptorMemorySpace
-      #endif
-                                          ) ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
+		                                    const uint8_t wIndex,
+		                                    const void** const DescriptorAddress)
+		                                    ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
 
 #endif
 
