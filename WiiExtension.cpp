@@ -22,8 +22,8 @@ void WiiExtension::read_controller(WiiController* controller) {
             bit_write(nchuk.buttonZ(), controller->digital_buttons_2, XBOX_B);
             controller->l_x = nchuk.joyX();
             controller->l_y = nchuk.joyY();
-            controller->r_x = (nchuk.rollAngle() + 180) * 364;
-            controller->r_y = (nchuk.pitchAngle() + 180) * 364;
+            controller->r_x = (nchuk.rollAngle() + 180) * 180;
+            controller->r_y = (nchuk.pitchAngle() + 180) * 180;
 		    break;
         case(ExtensionType::DrumController):
             controller->l_x = drum.joyX() * 4;
@@ -58,8 +58,8 @@ void WiiExtension::read_controller(WiiController* controller) {
         break;
 
   			case(ExtensionType::ClassicController):
-            controller->l_x = classic.leftJoyX()*8;
-            controller->l_y = classic.leftJoyY()*8;
+            controller->l_x = classic.leftJoyX()*4;
+            controller->l_y = classic.leftJoyY()*4;
             controller->r_x = classic.rightJoyX()*2048;
             controller->r_y = classic.rightJoyY()*2048;
             controller->lt = classic.triggerL()*4;

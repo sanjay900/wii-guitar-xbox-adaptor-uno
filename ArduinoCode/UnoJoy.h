@@ -80,7 +80,7 @@
     //  If you want to change the rate, you'll have to change it in the
     //  firmware for the ATmega8u2 as well.  250,000 is actually the best rate,
     //  but it's not supported on Macs, breaking the processing debugger.
-    Serial.begin(38400);
+    Serial.begin(250000);
     
     // Now set up the Timer 0 compare register A
     //  so that Timer0 (used for millis() and such)

@@ -108,7 +108,7 @@ void LEDoff(char ledNumber){
 	PORTD |= 1 << ledNumber;
 }
 int main(void) {
-	USART_Init(25);
+	USART_Init(3);
 	// Set clock @ 16Mhz
 	CPU_PRESCALE(0);
 
@@ -129,9 +129,9 @@ int main(void) {
 		serialWrite(3);
 		gamepad_state.rt = serialRead(25)*2;
 		serialWrite(4);
-		gamepad_state.l_x = serialRead(25)*1024;
+		gamepad_state.l_x = (serialRead(25)-128)*256;
 		serialWrite(5);
-		gamepad_state.l_y = serialRead(25)*1024;
+		gamepad_state.l_y = (serialRead(25)-128)*256;
 		serialWrite(7);
 		gamepad_state.r_x = serialRead(25);
 		serialWrite(6);
