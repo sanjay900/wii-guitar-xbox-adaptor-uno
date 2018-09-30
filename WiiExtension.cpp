@@ -1,4 +1,5 @@
 #include "WiiExtension.h"
+#define zero_acc 337.92
 extern "C" {
   #include "util.h"
 }
@@ -13,7 +14,13 @@ void WiiExtension::read_controller(WiiController* controller) {
         return;
     }
     ExtensionType conType = extension.getConnectedID();
-
+    
+    int xRead=0, yRead=0, zRead=0;
+    double xAng=0, yAng=0, zAng=0;
+    double x=0, y=0, z=0;
+    
+    int ave = 10;
+    double t;
 		switch (conType) {
         case(ExtensionType::DJTurntableController):
         break;
@@ -38,12 +45,28 @@ void WiiExtension::read_controller(WiiController* controller) {
             bit_write(drum.buttonMinus(), controller->digital_buttons_1, XBOX_BACK);
         break;
         case(ExtensionType::GuitarController):
-            controller->r_y = 0;
             controller->r_x = guitar.whammyBar()*2048;
-            
-            if(!digitalRead(4)) {
-                controller->r_y = 65535;
+            for(int i=0; i<ave ; i++)
+            {
+              xRead += analogRead(A0);
+              yRead += analogRead(A1);
             }
+            
+            xRead = xRead/ave;
+            yRead = yRead/ave;
+            xAng = (xRead - zero_acc);
+            yAng = (yRead - zero_acc);
+            z = RAD_TO_DEG * ((atan2(-yAng, -xAng) + PI));
+            if (z > 180) z = -360 + z;
+            if (z > 90) z = 180 - z;
+            if (z < -90) z = -180 - z;
+            t = z * (32767 / 90);
+            if (t > 0) {
+              t = pow(t,1.05f);
+            }
+            t = constrain(t, -32767, 32767);
+            t += 32767;
+            controller->r_y = (int)t;
             bit_write(guitar.strumUp() || guitar.joyY()>40, controller->digital_buttons_1, XBOX_DPAD_UP);
             bit_write(guitar.strumDown() || guitar.joyY()<20, controller->digital_buttons_1, XBOX_DPAD_DOWN);
             bit_write(guitar.joyX()<20, controller->digital_buttons_1, XBOX_DPAD_LEFT);

@@ -5,7 +5,8 @@ WiiExtension controller;
 WiiController data;
 void setup()
 {
-  pinMode(4, INPUT_PULLUP); 
+  pinMode(A3, OUTPUT); 
+  digitalWrite(A3, HIGH);
   controller.setup();
   setupUnoJoy();
 }
