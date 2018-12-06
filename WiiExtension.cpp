@@ -13,7 +13,7 @@ void WiiExtension::read_controller(WiiController* controller) {
         extension.connect();
         return;
     }
-    ExtensionType conType = extension.getConnectedID();
+    ExtensionType conType = extension.getControllerType();
     
     int xRead=0, yRead=0, zRead=0;
     double xAng=0, yAng=0, zAng=0;
