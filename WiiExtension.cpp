@@ -46,6 +46,9 @@ void WiiExtension::read_controller(WiiController* controller) {
         break;
         case(ExtensionType::GuitarController):
             controller->r_x = guitar.whammyBar()*2048;
+            if (guitar.whammyBar() <= 18) {
+              controller->r_x = 0;
+            }
             for(int i=0; i<ave ; i++)
             {
               xRead += analogRead(A0);
@@ -62,7 +65,7 @@ void WiiExtension::read_controller(WiiController* controller) {
             if (z < -90) z = -180 - z;
             t = z * (32767 / 90);
             if (t > 0) {
-              t = pow(t,1.05f);
+              t = pow(t,1.01f);
             }
             t = constrain(t, -32767, 32767);
             t += 32767;

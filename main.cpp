@@ -136,9 +136,6 @@ int main(void) {
 		gamepad_state.r_x = serialRead(25);
 		serialWrite(6);
 		gamepad_state.r_x = (gamepad_state.r_x << 8 | serialRead(25))-32768;
-		if (gamepad_state.r_x < 0) {
-			gamepad_state.r_x = -32768;
-		}
 		serialWrite(9);
 		gamepad_state.r_y = serialRead(25);
 		serialWrite(8);

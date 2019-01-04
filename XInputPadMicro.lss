@@ -165,15 +165,32 @@ Disassembly of section .text:
  1b4:	25 cf       	rjmp	.-438    	; 0x0 <__vectors>
 
 000001b6 <_Z10USART_Initj>:
+// Initializes the USART to receive and transmit,
+//  takes in a value you can find in the datasheet
+//  based on desired communication and clock speeds
+void USART_Init(uint16_t baudSetting){
+	// Set baud rate
+	UBRR1 = baudSetting;
  1b6:	90 93 cd 00 	sts	0x00CD, r25	; 0x8000cd <__EEPROM_REGION_LENGTH__+0x7f00cd>
  1ba:	80 93 cc 00 	sts	0x00CC, r24	; 0x8000cc <__EEPROM_REGION_LENGTH__+0x7f00cc>
+	// Enable receiver and transmitter
+	UCSR1B = (1<<RXEN1)|(1<<TXEN1);
  1be:	88 e1       	ldi	r24, 0x18	; 24
  1c0:	80 93 c9 00 	sts	0x00C9, r24	; 0x8000c9 <__EEPROM_REGION_LENGTH__+0x7f00c9>
+	// Set frame format: 8data, 1stop bit
+	UCSR1C = (1<<UCSZ10)|(1<<UCSZ11);	
  1c4:	86 e0       	ldi	r24, 0x06	; 6
  1c6:	80 93 ca 00 	sts	0x00CA, r24	; 0x8000ca <__EEPROM_REGION_LENGTH__+0x7f00ca>
+}
  1ca:	08 95       	ret
 
 000001cc <_Z10serialReadj>:
+// This reads the USART serial port, returning any data that's in the
+//  buffer, or a guaranteed zero if it took longer than timeout ms
+//  Input: uint_16 timeout - milliseconds to wait for data before timing out
+unsigned char serialRead( uint16_t timeout ){
+	// Wait for data to be received 
+	while ( !(UCSR1A & (1<<RXC1)) ){
  1cc:	20 91 c8 00 	lds	r18, 0x00C8	; 0x8000c8 <__EEPROM_REGION_LENGTH__+0x7f00c8>
  1d0:	27 fd       	sbrc	r18, 7
  1d2:	0a c0       	rjmp	.+20     	; 0x1e8 <_Z10serialReadj+0x1c>
@@ -189,29 +206,61 @@ Disassembly of section .text:
  1da:	f1 f7       	brne	.-4      	; 0x1d8 <_Z10serialReadj+0xc>
  1dc:	00 c0       	rjmp	.+0      	; 0x1de <_Z10serialReadj+0x12>
  1de:	00 00       	nop
+		_delay_ms(1);
+		timeout--;
  1e0:	01 97       	sbiw	r24, 0x01	; 1
+		if (timeout == 0){
  1e2:	a1 f7       	brne	.-24     	; 0x1cc <_Z10serialReadj>
+			return 0b0;
  1e4:	80 e0       	ldi	r24, 0x00	; 0
+		}			
+	}	
+	// Get and return received data from buffer 
+	return UDR1;
+}
  1e6:	08 95       	ret
+	return UDR1;
  1e8:	80 91 ce 00 	lds	r24, 0x00CE	; 0x8000ce <__EEPROM_REGION_LENGTH__+0x7f00ce>
  1ec:	08 95       	ret
 
 000001ee <_Z11serialWriteh>:
+
+// This sends out a byte of data via the USART.
+void serialWrite( unsigned char data )
+{
+	// Wait for empty transmit buffer
+	while ( !( UCSR1A & (1<<UDRE1)) ){
  1ee:	90 91 c8 00 	lds	r25, 0x00C8	; 0x8000c8 <__EEPROM_REGION_LENGTH__+0x7f00c8>
  1f2:	95 ff       	sbrs	r25, 5
  1f4:	fc cf       	rjmp	.-8      	; 0x1ee <_Z11serialWriteh>
+	}	
+	// Put data into buffer, sends the data
+	UDR1 = data;
  1f6:	80 93 ce 00 	sts	0x00CE, r24	; 0x8000ce <__EEPROM_REGION_LENGTH__+0x7f00ce>
+}
  1fa:	08 95       	ret
 
 000001fc <_Z15flushSerialReadv>:
+
+void flushSerialRead()
+{
+	unsigned char dummy;
+	while ( UCSR1A & (1<<RXC1) )
  1fc:	80 91 c8 00 	lds	r24, 0x00C8	; 0x8000c8 <__EEPROM_REGION_LENGTH__+0x7f00c8>
  200:	87 ff       	sbrs	r24, 7
  202:	03 c0       	rjmp	.+6      	; 0x20a <_Z15flushSerialReadv+0xe>
+		dummy = UDR1;
  204:	80 91 ce 00 	lds	r24, 0x00CE	; 0x8000ce <__EEPROM_REGION_LENGTH__+0x7f00ce>
+	while ( UCSR1A & (1<<RXC1) )
  208:	f9 cf       	rjmp	.-14     	; 0x1fc <_Z15flushSerialReadv>
+}
  20a:	08 95       	ret
 
 0000020c <_Z5LEDonc>:
+
+// This turns on one of the LEDs hooked up to the chip
+void LEDon(char ledNumber){
+	DDRD |= 1 << ledNumber;
  20c:	4a b1       	in	r20, 0x0a	; 10
  20e:	21 e0       	ldi	r18, 0x01	; 1
  210:	30 e0       	ldi	r19, 0x00	; 0
@@ -224,13 +273,19 @@ Disassembly of section .text:
  21e:	cb 01       	movw	r24, r22
  220:	46 2b       	or	r20, r22
  222:	4a b9       	out	0x0a, r20	; 10
+	PORTD &= ~(1 << ledNumber);
  224:	9b b1       	in	r25, 0x0b	; 11
  226:	80 95       	com	r24
  228:	89 23       	and	r24, r25
  22a:	8b b9       	out	0x0b, r24	; 11
+}
  22c:	08 95       	ret
 
 0000022e <_Z6LEDoffc>:
+
+// And this turns it off
+void LEDoff(char ledNumber){
+	DDRD &= ~(1 << ledNumber);
  22e:	4a b1       	in	r20, 0x0a	; 10
  230:	21 e0       	ldi	r18, 0x01	; 1
  232:	30 e0       	ldi	r19, 0x00	; 0
@@ -245,51 +300,76 @@ Disassembly of section .text:
  244:	90 95       	com	r25
  246:	94 23       	and	r25, r20
  248:	9a b9       	out	0x0a, r25	; 10
+	PORTD |= 1 << ledNumber;
  24a:	9b b1       	in	r25, 0x0b	; 11
  24c:	89 2b       	or	r24, r25
  24e:	8b b9       	out	0x0b, r24	; 11
+}
  250:	08 95       	ret
 
 00000252 <main>:
+int main(void) {
+	USART_Init(3);
  252:	83 e0       	ldi	r24, 0x03	; 3
  254:	90 e0       	ldi	r25, 0x00	; 0
  256:	af df       	rcall	.-162    	; 0x1b6 <_Z10USART_Initj>
+	// Set clock @ 16Mhz
+	CPU_PRESCALE(0);
  258:	80 e8       	ldi	r24, 0x80	; 128
  25a:	80 93 61 00 	sts	0x0061, r24	; 0x800061 <__EEPROM_REGION_LENGTH__+0x7f0061>
  25e:	10 92 61 00 	sts	0x0061, r1	; 0x800061 <__EEPROM_REGION_LENGTH__+0x7f0061>
+
+	// Init XBOX pad emulation
+	xbox_init(true);
  262:	81 e0       	ldi	r24, 0x01	; 1
+
+	// Pins polling and gamepad status updates
+	for (;;) {
+		xbox_reset_watchdog();
  264:	ff d0       	rcall	.+510    	; 0x464 <xbox_init>
+		LEDon(TXLED);
  266:	fc d0       	rcall	.+504    	; 0x460 <xbox_reset_watchdog>
  268:	85 e0       	ldi	r24, 0x05	; 5
+		flushSerialRead();
  26a:	d0 df       	rcall	.-96     	; 0x20c <_Z5LEDonc>
+		serialWrite(0);
  26c:	c7 df       	rcall	.-114    	; 0x1fc <_Z15flushSerialReadv>
  26e:	80 e0       	ldi	r24, 0x00	; 0
  270:	be df       	rcall	.-132    	; 0x1ee <_Z11serialWriteh>
+		gamepad_state.digital_buttons_1 = serialRead(25);
  272:	89 e1       	ldi	r24, 0x19	; 25
  274:	90 e0       	ldi	r25, 0x00	; 0
  276:	aa df       	rcall	.-172    	; 0x1cc <_Z10serialReadj>
  278:	80 93 08 01 	sts	0x0108, r24	; 0x800108 <gamepad_state+0x2>
+		serialWrite(1);
  27c:	81 e0       	ldi	r24, 0x01	; 1
  27e:	b7 df       	rcall	.-146    	; 0x1ee <_Z11serialWriteh>
+		gamepad_state.digital_buttons_2 = serialRead(25);
  280:	89 e1       	ldi	r24, 0x19	; 25
  282:	90 e0       	ldi	r25, 0x00	; 0
  284:	a3 df       	rcall	.-186    	; 0x1cc <_Z10serialReadj>
  286:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <gamepad_state+0x3>
+		serialWrite(2);
  28a:	82 e0       	ldi	r24, 0x02	; 2
  28c:	b0 df       	rcall	.-160    	; 0x1ee <_Z11serialWriteh>
+		gamepad_state.lt = serialRead(25)*2;
  28e:	89 e1       	ldi	r24, 0x19	; 25
  290:	90 e0       	ldi	r25, 0x00	; 0
  292:	9c df       	rcall	.-200    	; 0x1cc <_Z10serialReadj>
  294:	88 0f       	add	r24, r24
  296:	80 93 0a 01 	sts	0x010A, r24	; 0x80010a <gamepad_state+0x4>
+		serialWrite(3);
  29a:	83 e0       	ldi	r24, 0x03	; 3
+		gamepad_state.rt = serialRead(25)*2;
  29c:	a8 df       	rcall	.-176    	; 0x1ee <_Z11serialWriteh>
  29e:	89 e1       	ldi	r24, 0x19	; 25
  2a0:	90 e0       	ldi	r25, 0x00	; 0
  2a2:	94 df       	rcall	.-216    	; 0x1cc <_Z10serialReadj>
  2a4:	88 0f       	add	r24, r24
  2a6:	80 93 0b 01 	sts	0x010B, r24	; 0x80010b <gamepad_state+0x5>
+		serialWrite(4);
  2aa:	84 e0       	ldi	r24, 0x04	; 4
+		gamepad_state.l_x = (serialRead(25)-128)*256;
  2ac:	a0 df       	rcall	.-192    	; 0x1ee <_Z11serialWriteh>
  2ae:	89 e1       	ldi	r24, 0x19	; 25
  2b0:	90 e0       	ldi	r25, 0x00	; 0
@@ -298,7 +378,9 @@ Disassembly of section .text:
  2b6:	99 0b       	sbc	r25, r25
  2b8:	10 92 0c 01 	sts	0x010C, r1	; 0x80010c <gamepad_state+0x6>
  2bc:	80 93 0d 01 	sts	0x010D, r24	; 0x80010d <gamepad_state+0x7>
+		serialWrite(5);
  2c0:	85 e0       	ldi	r24, 0x05	; 5
+		gamepad_state.l_y = (serialRead(25)-128)*256;
  2c2:	95 df       	rcall	.-214    	; 0x1ee <_Z11serialWriteh>
  2c4:	89 e1       	ldi	r24, 0x19	; 25
  2c6:	90 e0       	ldi	r25, 0x00	; 0
@@ -307,7 +389,9 @@ Disassembly of section .text:
  2cc:	99 0b       	sbc	r25, r25
  2ce:	10 92 0e 01 	sts	0x010E, r1	; 0x80010e <gamepad_state+0x8>
  2d2:	80 93 0f 01 	sts	0x010F, r24	; 0x80010f <gamepad_state+0x9>
+		serialWrite(7);
  2d6:	87 e0       	ldi	r24, 0x07	; 7
+		gamepad_state.r_x = serialRead(25);
  2d8:	8a df       	rcall	.-236    	; 0x1ee <_Z11serialWriteh>
  2da:	89 e1       	ldi	r24, 0x19	; 25
  2dc:	90 e0       	ldi	r25, 0x00	; 0
@@ -315,7 +399,9 @@ Disassembly of section .text:
  2e0:	90 e0       	ldi	r25, 0x00	; 0
  2e2:	90 93 11 01 	sts	0x0111, r25	; 0x800111 <gamepad_state+0xb>
  2e6:	80 93 10 01 	sts	0x0110, r24	; 0x800110 <gamepad_state+0xa>
+		serialWrite(6);
  2ea:	86 e0       	ldi	r24, 0x06	; 6
+		gamepad_state.r_x = (gamepad_state.r_x << 8 | serialRead(25))-32768;
  2ec:	80 df       	rcall	.-256    	; 0x1ee <_Z11serialWriteh>
  2ee:	10 91 10 01 	lds	r17, 0x0110	; 0x800110 <gamepad_state+0xa>
  2f2:	00 e0       	ldi	r16, 0x00	; 0
@@ -327,16 +413,20 @@ Disassembly of section .text:
  2fe:	c9 01       	movw	r24, r18
  300:	90 58       	subi	r25, 0x80	; 128
  302:	90 93 11 01 	sts	0x0111, r25	; 0x800111 <gamepad_state+0xb>
+		serialWrite(9);
  306:	80 93 10 01 	sts	0x0110, r24	; 0x800110 <gamepad_state+0xa>
  30a:	89 e0       	ldi	r24, 0x09	; 9
+		gamepad_state.r_y = serialRead(25);
  30c:	70 df       	rcall	.-288    	; 0x1ee <_Z11serialWriteh>
  30e:	89 e1       	ldi	r24, 0x19	; 25
  310:	90 e0       	ldi	r25, 0x00	; 0
  312:	5c df       	rcall	.-328    	; 0x1cc <_Z10serialReadj>
  314:	90 e0       	ldi	r25, 0x00	; 0
  316:	90 93 13 01 	sts	0x0113, r25	; 0x800113 <gamepad_state+0xd>
+		serialWrite(8);
  31a:	80 93 12 01 	sts	0x0112, r24	; 0x800112 <gamepad_state+0xc>
  31e:	88 e0       	ldi	r24, 0x08	; 8
+		gamepad_state.r_y = (gamepad_state.r_y << 8 | serialRead(25))-32768;
  320:	66 df       	rcall	.-308    	; 0x1ee <_Z11serialWriteh>
  322:	30 91 12 01 	lds	r19, 0x0112	; 0x800112 <gamepad_state+0xc>
  326:	d3 2f       	mov	r29, r19
@@ -351,9 +441,11 @@ Disassembly of section .text:
  338:	90 58       	subi	r25, 0x80	; 128
  33a:	90 93 13 01 	sts	0x0113, r25	; 0x800113 <gamepad_state+0xd>
  33e:	80 93 12 01 	sts	0x0112, r24	; 0x800112 <gamepad_state+0xc>
+		LEDoff(TXLED);
  342:	85 e0       	ldi	r24, 0x05	; 5
  344:	74 df       	rcall	.-280    	; 0x22e <_Z6LEDoffc>
  346:	8a d0       	rcall	.+276    	; 0x45c <xbox_send_pad_state>
+		xbox_send_pad_state();
  348:	8e cf       	rjmp	.-228    	; 0x266 <main+0x14>
 
 0000034a <CALLBACK_USB_GetDescriptor>:
