@@ -15,11 +15,14 @@ BOARD        = UNO
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
-TARGET       = XInputPadMicro
 SRC          = main.cpp Descriptors.c XInputPad.c $(LUFA_SRC_USB)
 LUFA_PATH    = ./LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/
 LD_FLAGS     =
+OBJDIR		 = obj
+BIN		 	 = bin
+TARGET       = $(BIN)/XInputPadMicro
+$(info $(shell mkdir -p $(BIN)))
 
 # Default target
 all:

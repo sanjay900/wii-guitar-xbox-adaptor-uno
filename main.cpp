@@ -37,110 +37,114 @@ S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 extern "C" {
-	#include "XInputPad.h"
-	#include "util.h"
+#include "XInputPad.h"
+#include "util.h"
 }
-#include <avr/io.h>
-#include <util/delay.h>
-#include <avr/wdt.h>
+#include "WiiController.h"
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
-#include "WiiController.h"
+#include <avr/io.h>
+#include <avr/wdt.h>
+#include <util/delay.h>
 #define RXLED 4
 #define TXLED 5
 
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
-
-// Initializes the USART to receive and transmit,
-//  takes in a value you can find in the datasheet
-//  based on desired communication and clock speeds
-void USART_Init(uint16_t baudSetting){
-	// Set baud rate
-	UBRR1 = baudSetting;
-	// Enable receiver and transmitter
-	UCSR1B = (1<<RXEN1)|(1<<TXEN1);
-	// Set frame format: 8data, 1stop bit
-	UCSR1C = (1<<UCSZ10)|(1<<UCSZ11);	
-}
-
-// This reads the USART serial port, returning any data that's in the
-//  buffer, or a guaranteed zero if it took longer than timeout ms
-//  Input: uint_16 timeout - milliseconds to wait for data before timing out
-unsigned char serialRead( uint16_t timeout ){
-	// Wait for data to be received 
-	while ( !(UCSR1A & (1<<RXC1)) ){
-		_delay_ms(1);
-		timeout--;
-		if (timeout == 0){
-			return 0b0;
-		}			
-	}	
-	// Get and return received data from buffer 
-	return UDR1;
-}
-
-// This sends out a byte of data via the USART.
-void serialWrite( unsigned char data )
-{
-	// Wait for empty transmit buffer
-	while ( !( UCSR1A & (1<<UDRE1)) ){
-	}	
-	// Put data into buffer, sends the data
-	UDR1 = data;
-}
-
-void flushSerialRead()
-{
-	unsigned char dummy;
-	while ( UCSR1A & (1<<RXC1) )
-		dummy = UDR1;
-}
+uint8_t next_read_1;
 
 // This turns on one of the LEDs hooked up to the chip
-void LEDon(char ledNumber){
-	DDRD |= 1 << ledNumber;
-	PORTD &= ~(1 << ledNumber);
+void LEDon(char ledNumber) {
+  DDRD |= 1 << ledNumber;
+  PORTD &= ~(1 << ledNumber);
 }
 
 // And this turns it off
-void LEDoff(char ledNumber){
-	DDRD &= ~(1 << ledNumber);
-	PORTD |= 1 << ledNumber;
+void LEDoff(char ledNumber) {
+  DDRD &= ~(1 << ledNumber);
+  PORTD |= 1 << ledNumber;
 }
+ISR(USART1_RX_vect) {
+  char data = UDR1;
+  switch (next_read_1) {
+  case 0:
+    if (data == 'm') {
+      next_read_1++;
+    }
+    break;
+  case 1:
+    if (data == 'a')
+      next_read_1++;
+    else
+      next_read_1 = 0;
+    break;
+  case 2:
+    gamepad_state.digital_buttons_1 = data;
+	next_read_1++;
+    break;
+  case 3:
+    gamepad_state.digital_buttons_2 = data;
+	next_read_1++;
+    break;
+  case 4:
+    gamepad_state.lt = data * 2;
+	next_read_1++;
+    break;
+  case 5:
+    gamepad_state.rt = data * 2;
+	next_read_1++;
+    break;
+  case 6:
+    gamepad_state.l_x = (data - 128) * 256;
+	next_read_1++;
+    break;
+  case 7:
+    gamepad_state.l_y = (data - 128) * 256;
+	next_read_1++;
+    break;
+  case 8:
+    gamepad_state.r_x = data;
+	next_read_1++;
+    break;
+  case 9:
+    gamepad_state.r_x = (data << 8 | gamepad_state.r_x ) - 32768;
+	next_read_1++;
+    break;
+  case 10:
+    gamepad_state.r_y = data;
+	next_read_1++;
+    break;
+  case 11:
+    gamepad_state.r_y = (data << 8 | gamepad_state.r_y) - 32768;
+    next_read_1 = 0;
+    break;
+  }
+  xbox_reset_watchdog();
+  xbox_send_pad_state();
+}
+
+// Initializes the USART to receive,
+//  takes in a value you can find in the datasheet
+//  based on desired communication and clock speeds
+void USART_Init(uint16_t baudSetting) {
+  // Set baud rate
+  UBRR1 = baudSetting;
+  // Enable receiver
+  UCSR1B = (1 << RXEN1);
+  // Set frame format: 8data, 1stop bit
+  UCSR1C = (1 << UCSZ10) | (1 << UCSZ11);
+}
+
 int main(void) {
-	USART_Init(3);
-	// Set clock @ 16Mhz
-	CPU_PRESCALE(0);
 
-	// Init XBOX pad emulation
-	xbox_init(true);
+  USART_Init(1);
+  // Set clock @ 16Mhz
+  CPU_PRESCALE(0);
 
-	// Pins polling and gamepad status updates
-	for (;;) {
-		xbox_reset_watchdog();
-		LEDon(TXLED);
-		flushSerialRead();
-		serialWrite(0);
-		gamepad_state.digital_buttons_1 = serialRead(25);
-		serialWrite(1);
-		gamepad_state.digital_buttons_2 = serialRead(25);
-		serialWrite(2);
-		gamepad_state.lt = serialRead(25)*2;
-		serialWrite(3);
-		gamepad_state.rt = serialRead(25)*2;
-		serialWrite(4);
-		gamepad_state.l_x = (serialRead(25)-128)*256;
-		serialWrite(5);
-		gamepad_state.l_y = (serialRead(25)-128)*256;
-		serialWrite(7);
-		gamepad_state.r_x = serialRead(25);
-		serialWrite(6);
-		gamepad_state.r_x = (gamepad_state.r_x << 8 | serialRead(25))-32768;
-		serialWrite(9);
-		gamepad_state.r_y = serialRead(25);
-		serialWrite(8);
-		gamepad_state.r_y = (gamepad_state.r_y << 8 | serialRead(25))-32768;
-		LEDoff(TXLED);
-		xbox_send_pad_state();
-	}
+  // Init XBOX pad emulation
+  xbox_init(true);
+  UCSR1B |= (1 << RXCIE1);
+  sei();
+  // Pins polling and gamepad status updates
+  for (;;) {
+  }
 }
