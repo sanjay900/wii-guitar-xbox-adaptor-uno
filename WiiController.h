@@ -1,5 +1,4 @@
-#ifndef _WiiCxtension_H_
-#define _WiiCxtension_H_
+#pragma once
 #include <inttypes.h>
 typedef struct {
   uint8_t digital_buttons_1;
@@ -11,4 +10,3 @@ typedef struct {
   uint16_t r_x;
   uint16_t r_y;
 } WiiController;
-#endif

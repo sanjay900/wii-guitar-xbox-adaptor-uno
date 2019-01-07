@@ -38,9 +38,7 @@ S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
 */
 extern "C" {
 #include "XInputPad.h"
-#include "util.h"
 }
-#include "WiiController.h"
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -50,7 +48,6 @@ extern "C" {
 #define TXLED 5
 
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
-uint8_t next_read_1;
 
 // This turns on one of the LEDs hooked up to the chip
 void LEDon(char ledNumber) {
@@ -63,68 +60,66 @@ void LEDoff(char ledNumber) {
   DDRD &= ~(1 << ledNumber);
   PORTD |= 1 << ledNumber;
 }
+uint8_t current_control;
 ISR(USART1_RX_vect) {
   char data = UDR1;
-  switch (next_read_1) {
+  switch (current_control) {
   case 0:
     if (data == 'm') {
-      next_read_1++;
+      current_control++;
     }
     break;
   case 1:
     if (data == 'a')
-      next_read_1++;
+      current_control++;
     else
-      next_read_1 = 0;
+      current_control = 0;
     break;
   case 2:
     gamepad_state.digital_buttons_1 = data;
-	next_read_1++;
+	current_control++;
     break;
   case 3:
     gamepad_state.digital_buttons_2 = data;
-	next_read_1++;
+	current_control++;
     break;
   case 4:
     gamepad_state.lt = data * 2;
-	next_read_1++;
+	current_control++;
     break;
   case 5:
     gamepad_state.rt = data * 2;
-	next_read_1++;
+	current_control++;
     break;
   case 6:
     gamepad_state.l_x = (data - 128) * 256;
-	next_read_1++;
+	current_control++;
     break;
   case 7:
     gamepad_state.l_y = (data - 128) * 256;
-	next_read_1++;
+	current_control++;
     break;
   case 8:
     gamepad_state.r_x = data;
-	next_read_1++;
+	current_control++;
     break;
   case 9:
     gamepad_state.r_x = (data << 8 | gamepad_state.r_x ) - 32768;
-	next_read_1++;
+	current_control++;
     break;
   case 10:
     gamepad_state.r_y = data;
-	next_read_1++;
+	current_control++;
     break;
   case 11:
     gamepad_state.r_y = (data << 8 | gamepad_state.r_y) - 32768;
-    next_read_1 = 0;
+    current_control = 0;
     break;
   }
   xbox_reset_watchdog();
   xbox_send_pad_state();
 }
 
-// Initializes the USART to receive,
-//  takes in a value you can find in the datasheet
-//  based on desired communication and clock speeds
 void USART_Init(uint16_t baudSetting) {
   // Set baud rate
   UBRR1 = baudSetting;
@@ -144,7 +139,5 @@ int main(void) {
   xbox_init(true);
   UCSR1B |= (1 << RXCIE1);
   sei();
-  // Pins polling and gamepad status updates
-  for (;;) {
-  }
+  for (;;) {}
 }

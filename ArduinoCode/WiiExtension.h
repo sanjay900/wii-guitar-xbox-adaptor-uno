@@ -1,5 +1,4 @@
-#ifndef _WiiExtension_H_
-#define _WiiExtension_H_
+#pragma once
 #include <NintendoExtensionCtrl.h>
 #include "WiiController.h"
 class WiiExtension {
@@ -31,4 +30,3 @@ class WiiExtension {
 #define XBOX_B		0x20
 #define XBOX_X		0x40
 #define XBOX_Y		0x80
-#endif
