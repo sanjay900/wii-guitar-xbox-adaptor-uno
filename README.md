@@ -17,5 +17,4 @@ This project aims to provide an adapter that when used will expose a wii guitar 
 
 ## Building the hardware
 1. Find the I2C pins on your Arduino, and connect them to the extension / breakout board. Also connect ground to ground and 3.3v to 3.3v on the Arduino.
-2. Connect the arduino to the analogue pins of the arduino. Note that the ground pin needs to be connected seperately, as there are not enough analogue pins as the arduino shares them with I2C.
-3. Use double sided tape to adhere the gravity switch to the guitar. Note that the angle the switch is mounted can be used to calibrate when the switch activates, and so it is useful to open some tool that allows you to visualise the right joystick Y axis in order to calibrate this in a way that suits you.
+2. Connect the accelerometer to the analogue pins of the arduino. Note that the ground pin needs to be connected seperately, as there are not enough analogue pins as the arduino shares them with I2C.
