@@ -18,7 +18,7 @@ void setup()
   // controller.setup();
   // Serial.begin(500000);
 }
-void main()
+int main()
 {
   uart_init();
   stdout = &uart_output;

@@ -12,15 +12,16 @@ void uart_init(void) {
   UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
 }
 
-void uart_putchar(char c, FILE *stream) {
+int uart_putchar(char c, FILE *stream) {
     if (c == '\n') {
         uart_putchar('\r', stream);
     }
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = c;
+    return c;
 }
 
-char uart_getchar(FILE *stream) {
+int uart_getchar(FILE *stream) {
     loop_until_bit_is_set(UCSR0A, RXC0);
     return UDR0;
 }

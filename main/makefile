@@ -1,6 +1,8 @@
 MCU         = atmega328p
 TARGET_ARCH = -mmcu=$(MCU)
-TARGET      = main
+OBJDIR		 = obj
+BIN		 	 = bin
+TARGET      = $(BIN)/main
 CC          = avr-gcc
 CPPFLAGS    = -mmcu=$(MCU)
 CFLAGS      = -Os -g -Wall -I. -DF_CPU=16000000
@@ -10,14 +12,15 @@ PGMERISP    = -c avrispv2 -P /dev/ttyACM0
 DUDE        = /usr/bin/avrdude -V -p $(MCU)
 
 C_SRCS      = $(wildcard *.c)
-OBJ_FILES   = $(C_SRCS:.c=.o)
-
+OBJ_FILES2   = $(C_SRCS:.c=.o)
+OBJ_FILES   = $(OBJ_FILES2:%=$(OBJDIR)/%)
+$(info $(shell mkdir -p $(BIN) $(OBJDIR)))
 all:    $(TARGET).hex
 
 clean:
-	rm -f $(TARGET).elf *.o *.hex
+	rm -rf $(BIN) $(OBJDIR)
 
-%.o: %.c
+$(OBJDIR)/%.o: %.c
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 $(TARGET).elf: $(OBJ_FILES)
@@ -25,7 +28,7 @@ $(TARGET).elf: $(OBJ_FILES)
 
 $(TARGET).hex: $(TARGET).elf
 	avr-objcopy -j .text -j .data -O ihex $(TARGET).elf $(TARGET).hex
-	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" --change-section-lma .eeprom=0 -O ihex main.elf eeprom.hex
+	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" -O ihex bin/main.elf bin/eeprom.hex
 
 upload: $(TARGET).hex
 	$(DUDE) $(PGMER) -U flash:w:main.hex
