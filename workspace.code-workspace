@@ -1,0 +1,38 @@
+{
+	"folders": [
+		{
+			"path": "usb"
+		},
+		{
+			"path": "lufa"
+		},
+		{
+			"path": "main"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"array": "c",
+			"vector": "c",
+			"string_view": "c",
+			"usbtask.h": "c",
+			"condition_variable": "cpp",
+			"xinputpad.h": "c",
+			"arduino-usbserial.h": "c",
+			"version.h": "c",
+			"lightweightringbuff.h": "c",
+			"board.h": "c",
+			"leds.h": "c",
+			"serial.h": "c",
+			"descriptors.h": "c",
+			"usb.h": "c",
+			"util.h": "c",
+			"wiiextension.h": "c",
+			"nintendoextensionctrl.h": "c",
+			"setbaud.h": "c",
+			"sfr_defs.h": "c",
+			"stdio.h": "c",
+			"io.h": "c"
+		}
+	}
+}
