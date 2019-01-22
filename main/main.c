@@ -21,20 +21,18 @@ void setup()
 int main()
 {
   uart_init();
-  stdout = &uart_output;
-  stdin = &uart_input;
   DDRD &= ~(_BV(2));
   PORTD |= _BV(2);
   // controller.read_controller(&data);
   for (;;)
   {
     if (bit_is_clear(PIND, 2)) {
-      printf("%s", "bo");
+      uart_putstr("bo");
       for (;;){}
     }
-    printf("%s", "ma");
+    uart_putstr("ma");
     for (uint8_t i=0; i < sizeof(data); i++) {
-      printf("%c", ((uint8_t*)&data)[i]);
+      uart_putchar(((uint8_t*)&data)[i]);
     }
   }
 }

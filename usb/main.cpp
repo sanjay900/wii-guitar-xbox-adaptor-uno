@@ -45,8 +45,6 @@ extern "C" {
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include "bootloader.h"
-#define RXLED 4
-#define TXLED 5
 
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
 
@@ -113,24 +111,23 @@ ISR(USART1_RX_vect) {
   xbox_send_pad_state();
 }
 
-void USART_Init(uint16_t baudSetting) {
+void USART_Init() {
   // Set baud rate
-  UBRR1 = baudSetting;
-  // Enable receiver
-  UCSR1B = (1 << RXEN1);
+  UBRR1 = 1;
+  // Enable receiver and interrupt
+  UCSR1B = _BV(RXEN1) | _BV(RXCIE1);
   // Set frame format: 8data, 1stop bit
-  UCSR1C = (1 << UCSZ10) | (1 << UCSZ11);
+  UCSR1C = _BV(UCSZ10) | _BV(UCSZ11);
 }
 
 int main(void) {
 
-  USART_Init(1);
+  USART_Init();
   // Set clock @ 16Mhz
   CPU_PRESCALE(0);
 
   // Init XBOX pad emulation
   xbox_init(true);
-  UCSR1B |= (1 << RXCIE1);
   sei();
   for (;;) {}
 }
