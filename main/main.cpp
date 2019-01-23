@@ -24,7 +24,6 @@ int main()
   DDRD &= ~(_BV(2));
   PORTD |= _BV(2);
   controller.setup();
-  controller.connect();
   for (;;)
   {
     controller.read_controller(&data);
