@@ -1,37 +1,71 @@
-MCU         = atmega328p
-TARGET_ARCH = -mmcu=$(MCU)
-OBJDIR		 = obj
-BIN		 	 = bin
-TARGET      = $(BIN)/main
-CC          = avr-gcc
-CPPFLAGS    = -mmcu=$(MCU)
-CFLAGS      = -Os -g -Wall -I. -DF_CPU=16000000
-LDFLAGS     = -g -mmcu=$(MCU) -lm -Wl,--gc-sections -Os
+# Hardware
+MCU     = atmega328p # see `make show-mcu`
+OSC     = 16000000UL
+PROJECT = bin/main
+
+# ----- These configurations are quite likely not to be changed -----
+
+# Binaries
+GCC     = avr-gcc
+G++     = avr-g++
+RM      = rm -f
+AVRDUDE = avrdude
+
+# Files
+EXT_C   = c
+EXT_C++ = cpp
+EXT_ASM = asm
+
 PGMER       = -c arduino -b 115200 -P /dev/ttyACM0
 PGMERISP    = -c avrispv2 -P /dev/ttyACM0
-DUDE        = /usr/bin/avrdude -V -p $(MCU)
+DUDE = /usr/bin/avrdude -V -p $(MCU)
+# ----- No changes should be necessary below this line -----
 
-C_SRCS      = $(wildcard *.c)
-OBJ_FILES2   = $(C_SRCS:.c=.o)
-OBJ_FILES   = $(OBJ_FILES2:%=$(OBJDIR)/%)
-$(info $(shell mkdir -p $(BIN) $(OBJDIR)))
-all:    $(TARGET).hex
+OBJECTS = \
+	$(patsubst %.$(EXT_C),obj/%.o,$(wildcard **/*.$(EXT_C))) \
+	$(patsubst %.$(EXT_C++),obj/%.o,$(wildcard **/*.$(EXT_C++))) \
+	$(patsubst %.$(EXT_C),obj/%.o,$(wildcard *.$(EXT_C))) \
+	$(patsubst %.$(EXT_C++),obj/%.o,$(wildcard *.$(EXT_C++)))
+
+
+# TODO explain these flags, make them configurable
+CFLAGS = $(INC)
+CFLAGS += -Os
+CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+CFLAGS += -Wall -Wstrict-prototypes
+CFLAGS += -DF_OSC=$(OSC)
+CFLAGS += -DF_CPU=$(OSC)
+CFLAGS += -mmcu=$(MCU)
+
+C++FLAGS = $(INC)
+C++FLAGS += -Os
+C++FLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+C++FLAGS += -Wall
+C++FLAGS += -DF_OSC=$(OSC)
+C++FLAGS += -DF_CPU=$(OSC)
+C++FLAGS += -mmcu=$(MCU)
+
+default: $(PROJECT).elf
+	echo $(OBJECTS)
+
+%.elf: $(OBJECTS)
+	@mkdir -p $(@D)
+	$(GCC) $(CFLAGS) $(OBJECTS) --output $@ $(LDFLAGS)
+
+obj/%.o : %.$(EXT_C)
+	@mkdir -p $(@D)
+	$(GCC) $< $(CFLAGS) -c -o $@
+
+obj/%.o : %.$(EXT_C++)
+	@mkdir -p $(@D)
+	$(G++) $< $(C++FLAGS) -c -o $@
 
 clean:
-	rm -rf $(BIN) $(OBJDIR)
+	$(RM) -R bin obj
 
-$(OBJDIR)/%.o: %.c
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
-
-$(TARGET).elf: $(OBJ_FILES)
-	$(CC) $(LDFLAGS) -o $@ $(OBJ_FILES)
-
-$(TARGET).hex: $(TARGET).elf
-	avr-objcopy -j .text -j .data -O ihex $(TARGET).elf $(TARGET).hex
+$(PROJECT).hex: $(PROJECT).elf
+	avr-objcopy -j .text -j .data -O ihex $(PROJECT).elf $(PROJECT).hex
 	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" -O ihex bin/main.elf bin/eeprom.hex
 
-upload: $(TARGET).hex
-	$(DUDE) $(PGMER) -U flash:w:main.hex
-
-size: main.elf
-	avr-size --format=avr --mcu=$(MCU) main.elf
+upload: $(PROJECT).hex
+	$(DUDE) $(PGMER) -U flash:w:bin/main.hex

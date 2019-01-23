@@ -1,8 +1,6 @@
 #include <avr/io.h>
 #include <stdio.h>
 
-/* http://www.cs.mun.ca/~rod/Winter2007/4723/notes/serial/serial.html */
-
 void uart_init(void) {
      // Set baud rate
   UBRR0 = 1;
@@ -17,7 +15,7 @@ void uart_putchar(char c) {
     UDR0 = c;
 }
 
-void uart_putstr(char* c) {
+void uart_putstr(const char* c) {
     for (uint8_t i =0; c[i] != '\0'; i++) {
         uart_putchar(c[i]);
     }
