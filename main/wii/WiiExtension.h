@@ -1,19 +1,20 @@
 #pragma once
 #include "../Controller.h"
-extern "C"
-{
-#include "../uart.h"
-#include <stdio.h>
-#include "../twi/TWIlib.h"
-}
+#include "../twi/I2Cdev.h"
 #include "util/delay.h"
-#include "WiiExtensions.h"
-class WiiExtension
-{
+#include "../mpu6050/mpu.h"
+#include "NintendoExtensionCtrl.h"
+
+class WiiExtension {
 public:
-  uint8_t addr = 0x52;
-  ExtensionType conType;
-  void read_controller(Controller *controller);
-  void setup();
-  void connect();
+  ExtensionPort port;
+  Nunchuk::Shared nchuk;
+  ClassicController::Shared classic;
+  DrumController::Shared drum;
+  GuitarController::Shared guitar;
+  DJTurntableController::Shared dj;
+
+  bool read_controller(Controller *controller);
+  WiiExtension();
+  void init();
 };

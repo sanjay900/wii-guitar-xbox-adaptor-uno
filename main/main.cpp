@@ -1,42 +1,33 @@
-#include "wii/WiiExtension.h"
-#include "wii/WiiExtensions.h"
 #include "Controller.h"
 #include "util.h"
-#include <stdio.h>
-#include <avr/sfr_defs.h>
-#include <avr/io.h>
 #include "util/delay.h"
+#include "wii/WiiExtension.h"
 #include <avr/interrupt.h>
-
-extern "C"
-{
-#include "uart.h"
-#include "twi/TWIlib.h"
+#include <avr/io.h>
+#include <avr/sfr_defs.h>
+#include "twi/I2Cdev.h"
+extern "C" {
+#include "uart/uart.h"
 }
 
 WiiExtension controller;
 
 Controller data;
-int main()
-{
+int main() {
   sei();
   uart_init();
+  controller.init();
   DDRD &= ~(_BV(2));
   PORTD |= _BV(2);
-  controller.setup();
   for (;;)
   {
-    controller.read_controller(&data);
+    if (controller.read_controller(&data)) {
+      uart_putstr("bo");
+      for (;;){}
+    }
+    uart_putstr("ma");
+    for (uint8_t i=0; i < sizeof(data); i++) {
+      uart_putchar(((uint8_t*)&data)[i]);
+    }
   }
-  // for (;;)
-  // {
-  //   if (bit_is_clear(PIND, 2)) {
-  //     uart_putstr("bo");
-  //     for (;;){}
-  //   }
-  //   uart_putstr("ma");
-  //   for (uint8_t i=0; i < sizeof(data); i++) {
-  //     uart_putchar(((uint8_t*)&data)[i]);
-  //   }
-  // }
 }

@@ -20,12 +20,10 @@ PGMER       = -c arduino -b 115200 -P /dev/ttyACM0
 PGMERISP    = -c avrispv2 -P /dev/ttyACM0
 DUDE = /usr/bin/avrdude -V -p $(MCU)
 # ----- No changes should be necessary below this line -----
-
+C_FILES = $(shell find . -type f -name '*.c')
 OBJECTS = \
-	$(patsubst %.$(EXT_C),obj/%.o,$(wildcard **/*.$(EXT_C))) \
-	$(patsubst %.$(EXT_C++),obj/%.o,$(wildcard **/*.$(EXT_C++))) \
-	$(patsubst %.$(EXT_C),obj/%.o,$(wildcard *.$(EXT_C))) \
-	$(patsubst %.$(EXT_C++),obj/%.o,$(wildcard *.$(EXT_C++)))
+	$(patsubst %.$(EXT_C),obj/%.o,$(shell find . -type f -name '*.${EXT_C}')) \
+	$(patsubst %.$(EXT_C++),obj/%.o,$(shell find . -type f -name '*.${EXT_C++}')) 
 
 
 # TODO explain these flags, make them configurable

@@ -1,5 +1,4 @@
 #include <avr/io.h>
-#include <stdio.h>
 
 void uart_init(void) {
      // Set baud rate
