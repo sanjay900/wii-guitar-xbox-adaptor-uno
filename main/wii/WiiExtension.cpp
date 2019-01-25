@@ -1,26 +1,21 @@
 #include "WiiExtension.h"
 #include "../util.h"
 #include <util/delay.h>
-#define constrain(amt, low, high) \
+#define constrain(amt, low, high)                                              \
   ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
 WiiExtension::WiiExtension()
     : nchuk(port), classic(port), dj(port), guitar(port), drum(port) {}
-void WiiExtension::init()
-{
+void WiiExtension::init() {
   I2Cdev::TWIInit();
   mympu_open(50);
 }
-bool WiiExtension::read_controller(Controller *controller)
-{
-  if (!port.update())
-  {
+bool WiiExtension::read_controller(Controller *controller) {
+  if (!port.update()) {
     port.connect();
     return false;
   }
-  double z;
-  switch (port.getControllerType())
-  {
+  switch (port.getControllerType()) {
   case (ExtensionType::DJTurntableController):
     break;
   case (ExtensionType::Nunchuk):
@@ -44,24 +39,17 @@ bool WiiExtension::read_controller(Controller *controller)
     bit_write(drum.buttonMinus(), controller->digital_buttons_1, XBOX_BACK);
     break;
   case (ExtensionType::GuitarController):
-    if (guitar.buttonPlus() && guitar.buttonMinus())
-    {
+    if (guitar.buttonPlus() && guitar.buttonMinus()) {
       return true;
     }
+    double z;
     mympu_update();
-    controller->r_x = -(guitar.whammyBar() - 14) * 1024;
-    if (guitar.whammyBar() <= 18)
-    {
-      controller->r_x = 0;
-    }
-    z = 32767 + (mympu.ypr[2] * (32767 / M_PI));
-    if (z > 32767)
-    {
+    z = (mympu.ypr[2] * (32767 / M_PI));
+    if (z > 32767) {
       z = 0;
     }
     z = z * 2;
-    if (z > 32767)
-    {
+    if (z > 32767) {
       z = 65535 - z;
     }
     z = pow(z, 1.1f);
@@ -85,14 +73,13 @@ bool WiiExtension::read_controller(Controller *controller)
     break;
 
   case (ExtensionType::ClassicController):
-    if (classic.buttonStart() && classic.buttonSelect())
-    {
+    if (classic.buttonStart() && classic.buttonSelect()) {
       return true;
     }
     controller->l_x = classic.leftJoyX() * 4;
     controller->l_y = classic.leftJoyY() * 4;
-    controller->r_x = classic.rightJoyX() * 2048;
-    controller->r_y = classic.rightJoyY() * 2048;
+    controller->r_x = (classic.rightJoyX() * 2048) - 32768;
+    controller->r_y = (classic.rightJoyY() * 2048) - 32768;
     controller->lt = classic.triggerL() * 4;
     controller->rt = classic.triggerR() * 4;
     bit_write(classic.dpadUp(), controller->digital_buttons_1, XBOX_DPAD_UP);

@@ -32,7 +32,17 @@
 			"setbaud.h": "c",
 			"sfr_defs.h": "c",
 			"stdio.h": "c",
-			"io.h": "c"
+			"io.h": "c",
+			"twilib.h": "c",
+			"controller.h": "c",
+			"delay.h": "c",
+			"wiiextensions.h": "c",
+			"i2cdev.h": "c",
+			"mpu.h": "c",
+			"extensioncontroller.h": "c",
+			"nxc_datamaps.h": "c",
+			"nxc_comms.h": "c",
+			"nxc_identity.h": "c"
 		}
 	}
 }

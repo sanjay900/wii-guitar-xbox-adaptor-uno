@@ -95,7 +95,7 @@ ISR(USART1_RX_vect) {
 	current_control++;
     break;
   case 9:
-    gamepad_state.r_x = (data << 8 | gamepad_state.r_x ) - 32768;
+    gamepad_state.r_x = (data << 8 | gamepad_state.r_x);
 	current_control++;
     break;
   case 10:
@@ -103,7 +103,7 @@ ISR(USART1_RX_vect) {
 	current_control++;
     break;
   case 11:
-    gamepad_state.r_y = (data << 8 | gamepad_state.r_y) - 32768;
+    gamepad_state.r_y = (data << 8 | gamepad_state.r_y);
     current_control = 0;
     break;
   }

@@ -21,7 +21,7 @@ int main() {
   PORTD |= _BV(2);
   for (;;)
   {
-    if (controller.read_controller(&data)) {
+    if (controller.read_controller(&data) || bit_is_clear(PIND, 2)) {
       uart_putstr("bo");
       for (;;){}
     }

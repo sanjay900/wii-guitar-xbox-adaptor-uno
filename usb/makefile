@@ -23,7 +23,7 @@ OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/XInputPadMicro
 AVRDUDE_PROGRAMMER = avr109
-AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0
+AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 $(info $(shell mkdir -p $(BIN)))
 
 # Default target
