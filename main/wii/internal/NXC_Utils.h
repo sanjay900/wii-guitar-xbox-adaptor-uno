@@ -24,15 +24,10 @@
 #define NXC_Core_h
 
 #include "NXC_Comms.h"
-#define HEX 0
-#define BIN 1
 namespace NintendoExtensionCtrl {
 
 	// Utility
 	boolean verifyData(const uint8_t * dataIn, uint8_t dataSize);
-	void printRaw(const uint8_t * dataIn, uint8_t dataSize, uint8_t baseFormat = HEX);
-	void printRaw(uint8_t dataIn, uint8_t baseFormat = HEX);
-	void printRepeat(char c, uint8_t nPrint);
 
 	class RolloverChange {
 	public:

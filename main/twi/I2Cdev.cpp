@@ -6,7 +6,6 @@ int I2Cdev::RXBuffIndex;
 volatile int I2Cdev::TXBuffIndex;
 volatile uint8_t I2Cdev::TWIReceiveBuffer[RXMAXBUFLEN];
 uint8_t I2Cdev::TWITransmitBuffer[TXMAXBUFLEN];
-bool I2Cdev::validData;
 /** Default constructor.
  */
 I2Cdev::I2Cdev() {}
@@ -46,7 +45,6 @@ uint8_t I2Cdev::TWIWriteRegisterMultiple(uint8_t device, uint8_t addr,
 }
 uint8_t I2Cdev::TWIReadRegister(uint8_t device, uint8_t address,
                                 uint8_t bytesToRead) {
-  validData = false;
   uint8_t msg[] = {(device << 1) & 0xFE, address};
   TWITransmitData(msg, 2, 0);
   WAIT_TWI;
@@ -443,9 +441,6 @@ void I2Cdev::interrupt() {
 
     /// -- HANDLE DATA BYTE --- ///
     TWIReceiveBuffer[RXBuffIndex++] = TWDR;
-    if (TWIReceiveBuffer[RXBuffIndex - 1] != 0xFF) {
-      validData = true;
-    }
     // If there is more than one byte to be read, receive data byte and return
     // an ACK
     if (RXBuffIndex < RXBuffLen - 1) {
@@ -464,9 +459,6 @@ void I2Cdev::interrupt() {
 
     /// -- HANDLE DATA BYTE --- ///
     TWIReceiveBuffer[RXBuffIndex++] = TWDR;
-    if (TWIReceiveBuffer[RXBuffIndex - 1] != 0xFF) {
-      validData = true;
-    }
     // This transmission is complete however do not release bus yet
     if (TWIInfo.repStart) {
       TWIInfo.errorCode = 0xFF;

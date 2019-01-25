@@ -10,9 +10,9 @@ public:
   ExtensionPort port;
   Nunchuk::Shared nchuk;
   ClassicController::Shared classic;
-  DrumController::Shared drum;
-  GuitarController::Shared guitar;
   DJTurntableController::Shared dj;
+  GuitarController::Shared guitar;
+  DrumController::Shared drum;
 
   bool read_controller(Controller *controller);
   WiiExtension();

@@ -29,7 +29,7 @@ OBJECTS = \
 # TODO explain these flags, make them configurable
 CFLAGS = $(INC)
 CFLAGS += -Os
-CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums
 CFLAGS += -Wall -Wstrict-prototypes
 CFLAGS += -DF_OSC=$(OSC)
 CFLAGS += -DF_CPU=$(OSC)
@@ -37,7 +37,7 @@ CFLAGS += -mmcu=$(MCU)
 
 C++FLAGS = $(INC)
 C++FLAGS += -Os
-C++FLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+C++FLAGS += -funsigned-char -funsigned-bitfields -fshort-enums
 C++FLAGS += -Wall
 C++FLAGS += -DF_OSC=$(OSC)
 C++FLAGS += -DF_CPU=$(OSC)
