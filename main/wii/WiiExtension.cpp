@@ -42,6 +42,10 @@ bool WiiExtension::read_controller(Controller *controller) {
     if (guitar.buttonPlus() && guitar.buttonMinus()) {
       return true;
     }
+    controller->r_x = -(guitar.whammyBar() - 14) * 1024;
+    if (guitar.whammyBar() <= 18) {
+      controller->r_x = 0;
+    }
     double z;
     mympu_update();
     z = (mympu.ypr[2] * (32767 / M_PI));
