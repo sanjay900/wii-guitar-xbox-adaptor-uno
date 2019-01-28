@@ -39,12 +39,13 @@ S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
 extern "C" {
 #include "XInputPad.h"
 }
+#include "bootloader.h"
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/wdt.h>
+#include <stdlib.h>
 #include <util/delay.h>
-#include "bootloader.h"
 
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
 
@@ -53,14 +54,11 @@ ISR(USART1_RX_vect) {
   char data = UDR1;
   switch (current_control) {
   case 0:
-    if (data == 'm' || data == 'b') {
+    if (data == 'm') {
       current_control++;
     }
     break;
   case 1:
-    if (data == 'o') {
-      bootloader();
-    }
     if (data == 'a')
       current_control++;
     else
@@ -68,42 +66,37 @@ ISR(USART1_RX_vect) {
     break;
   case 2:
     gamepad_state.digital_buttons_1 = data;
-	current_control++;
+    if (bit_is_set(data, 4) && bit_is_set(data, 5)) {
+      bootloader();
+    }
+    current_control++;
     break;
   case 3:
     gamepad_state.digital_buttons_2 = data;
-	current_control++;
+    current_control++;
     break;
   case 4:
-    gamepad_state.lt = data * 2;
-	current_control++;
+    gamepad_state.lt = data;
+    current_control++;
     break;
   case 5:
-    gamepad_state.rt = data * 2;
-	current_control++;
+    gamepad_state.rt = data;
+    current_control++;
     break;
   case 6:
-    gamepad_state.l_x = (data - 128) * 256;
-	current_control++;
+    gamepad_state.l_x = ((data - 128) * 256);
+    current_control++;
     break;
   case 7:
-    gamepad_state.l_y = (data - 128) * 256;
-	current_control++;
+    gamepad_state.l_y = ((data - 128) * 256);
+    current_control++;
     break;
   case 8:
-    gamepad_state.r_x = data;
-	current_control++;
+    gamepad_state.r_x = ((data - 128) * 256);
+    current_control++;
     break;
   case 9:
-    gamepad_state.r_x = (data << 8 | gamepad_state.r_x);
-	current_control++;
-    break;
-  case 10:
-    gamepad_state.r_y = data;
-	current_control++;
-    break;
-  case 11:
-    gamepad_state.r_y = (data << 8 | gamepad_state.r_y);
+    gamepad_state.r_y = ((data - 128) * 256);
     current_control = 0;
     break;
   }
@@ -113,7 +106,8 @@ ISR(USART1_RX_vect) {
 
 void USART_Init() {
   // Set baud rate
-  UBRR1 = 1;
+  UBRR1 = 16;
+  // UCSR1A = _BV(U2X1);
   // Enable receiver and interrupt
   UCSR1B = _BV(RXEN1) | _BV(RXCIE1);
   // Set frame format: 8data, 1stop bit
@@ -129,5 +123,6 @@ int main(void) {
   // Init XBOX pad emulation
   xbox_init(true);
   sei();
-  for (;;) {}
+  for (;;) {
+  }
 }

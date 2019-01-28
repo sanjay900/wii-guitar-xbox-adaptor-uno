@@ -14,7 +14,8 @@ public:
   GuitarController::Shared guitar;
   DrumController::Shared drum;
 
-  bool read_controller(Controller *controller);
+  void read_controller(Controller *controller);
   WiiExtension();
   void init();
+  int counter;
 };

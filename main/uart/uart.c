@@ -2,8 +2,9 @@
 
 void uart_init(void) {
      // Set baud rate
-  UBRR0 = 1;
-  // Enable transmitter
+  UBRR0 = 16;
+//   UCSR0A = _BV(U2X0);
+  // Enable transmitter, enable transmit interrupt
   UCSR0B = _BV(TXEN0);
   // Set frame format: 8data, 1stop bit
   UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
